@@ -73,22 +73,6 @@ bytes we received, which is the whole game for an audited financial close.
 - `pl_recon_month_close` — restates every day in the month with the latest data, then
   freezes the month in `recon_period_control`.
 
-### System design (full stack)
-
-The same picture with the actual technologies, medallion tables, orchestration, and
-governance attached:
-
-![system design](diagrams/system_design.png)
-
-A numbered walkthrough variant (① → ⑧, for a step-by-step read) is at
-`diagrams/system_design_numbered.png`: ① ADF trigger fires nightly → ② sources land raw
-→ ③ bronze types and de-dupes → ④ silver conforms both systems to one schema and builds
-the SCD2 dimensions → ⑤ the PySpark engine matches and classifies → ⑥ results land in the
-gold fact and marts (writes guarded by `recon_period_control`) → ⑦ SQL marts serve Finance
-and Product → ⑧ every run is logged for audit.
-
----
-
 ## 3. Data model (ERD)
 
 ![erd](diagrams/erd.png)
