@@ -328,27 +328,6 @@ centralizes the ADLS account/container so it points at one place.
 
 ---
 
-## 12. Trade-offs & what I'd do with more time
-
-- **Fallback confidence is a transparent linear score, not a learned model.** Chosen for
-  auditability — Finance can read *why* a match was made. With more data I'd calibrate
-  the weights/floor against analyst-confirmed outcomes (or a light classifier) while
-  keeping the score explainable.
-- **Greedy 1:1 fallback assignment**, not global optimal. Cheap and good enough at this
-  grain; a Hungarian/optimal assignment would marginally improve dense ambiguous days at
-  real cost.
-- **DQ is a tie-out gate plus per-row flags** (`fx_missing`, `dq_unmapped_type`). I'd
-  promote these to a first-class expectations suite (e.g. Delta Live Tables expectations)
-  with quarantine tables.
-- **Bridge learning is described but seeded.** Productionizing the feedback loop from
-  Stage-1 matches into the bridge is the highest-value next step for keyless operators.
-- **Plan dimension is SCD2 but plan↔txn linkage is simple.** Plans are effective-dated
-  (Type 2) so amounts validate against the contemporaneous price; with more time I'd add
-  proration handling for mid-cycle plan changes and a learned `plan_code` inference for
-  feeds that omit it.
-
----
-
 ## Performance & scale
 
 At the stated volumes (50k–500k rows/day/operator — megabytes, not terabytes) the costs
