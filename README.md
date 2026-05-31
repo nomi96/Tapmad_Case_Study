@@ -123,9 +123,6 @@ doesn't break the union.
 
 ![decision tree](diagrams/decision_tree_simple.png)
 
-*(Full branch-level version, including the confidence-score breakdown and the
-closed-month routing, is at `diagrams/decision_tree.png`.)*
-
 Both sides are first restricted to **money-bearing** txn types and conformed to a
 common reporting currency and a UTC-derived `business_date`. Then:
 
