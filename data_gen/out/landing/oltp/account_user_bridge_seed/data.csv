@@ -1,0 +1,5 @@
+operator_code,account_id,user_id,sub_id,effective_from,effective_to,is_current
+telco_d,8801000000001,U_D1,SUB_D1,2026-05-01,9999-12-31,true
+telco_d,8801000000999,U_D9,SUB_D9,2026-05-01,9999-12-31,true
+telco_d,8801000000777,U_OLD,SUB_OLD,2026-05-01,2026-05-20,false
+telco_d,8801000000777,U_NEW,SUB_NEW,2026-05-20,9999-12-31,true

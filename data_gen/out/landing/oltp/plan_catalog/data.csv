@@ -1,0 +1,7 @@
+operator_code,plan_code,price_original,currency,billing_period,effective_from
+telco_a,PLN_A1,1200.00,NGN,monthly,2026-05-01
+telco_a,PLN_A1,1500.00,NGN,monthly,2026-05-16
+telco_b,PLN_B1,550.00,PKR,monthly,2026-05-01
+telco_c,PLN_C1,120.50,TRY,monthly,2026-05-01
+telco_d,PLN_D1,300.00,BDT,monthly,2026-05-01
+telco_f,PLN_F1,450.00,LKR,monthly,2026-05-01

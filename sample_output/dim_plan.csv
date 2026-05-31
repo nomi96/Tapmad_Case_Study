@@ -1,0 +1,7 @@
+operator_code,plan_code,price_original,currency,billing_period,effective_from,effective_to,is_current
+telco_a,PLN_A1,1200.0,NGN,monthly,2026-05-01,2026-05-16,False
+telco_a,PLN_A1,1500.0,NGN,monthly,2026-05-16,9999-12-31,True
+telco_b,PLN_B1,550.0,PKR,monthly,2026-05-01,9999-12-31,True
+telco_c,PLN_C1,120.5,TRY,monthly,2026-05-01,9999-12-31,True
+telco_d,PLN_D1,300.0,BDT,monthly,2026-05-01,9999-12-31,True
+telco_f,PLN_F1,450.0,LKR,monthly,2026-05-01,9999-12-31,True

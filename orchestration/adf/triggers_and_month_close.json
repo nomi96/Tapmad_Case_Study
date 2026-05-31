@@ -1,0 +1,58 @@
+{
+  "triggers": [
+    {
+      "name": "tr_recon_daily_0300utc",
+      "properties": {
+        "type": "ScheduleTrigger",
+        "typeProperties": { "recurrence": { "frequency": "Day", "interval": 1, "startTime": "2026-01-01T03:00:00Z", "timeZone": "UTC" } },
+        "comment": "03:00 UTC: late enough that all operators' previous-day files have landed, early enough for Finance's morning.",
+        "pipelines": [{ "pipelineReference": { "referenceName": "pl_recon_daily", "type": "PipelineReference" }, "parameters": { "business_date": "@formatDateTime(addDays(trigger().scheduledTime,-1),'yyyy-MM-dd')" } }]
+      }
+    }
+  ],
+
+  "pipelines": [
+    {
+      "name": "pl_recon_month_close",
+      "properties": {
+        "description": "Run at close_lag_days into month N+1. Re-runs every business_date of month N with latest data (restatement), then flips recon_period_control to 'closed' so the month is frozen.",
+        "parameters": { "period": { "type": "string" } },
+        "activities": [
+          {
+            "name": "RestateAllDaysInPeriod",
+            "type": "ForEach",
+            "comment": "Idempotent re-run of each day in the period with the latest silver data (absorbs in-period late arrivals). Open month => partition overwrite is allowed.",
+            "typeProperties": {
+              "isSequential": true,
+              "items": { "value": "@activity('EnumeratePeriodDays').output.value", "type": "Expression" },
+              "activities": [
+                { "name": "ReconDay", "type": "ExecutePipeline", "typeProperties": { "pipeline": { "referenceName": "pl_recon_daily", "type": "PipelineReference" }, "parameters": { "business_date": "@item().day" }, "waitOnCompletion": true } }
+              ]
+            }
+          },
+          {
+            "name": "ClosePeriod",
+            "type": "DatabricksSparkPython",
+            "dependsOn": [{ "activity": "RestateAllDaysInPeriod", "dependencyConditions": ["Succeeded"] }],
+            "linkedServiceName": { "referenceName": "ls_databricks", "type": "LinkedServiceReference" },
+            "typeProperties": { "pythonFile": "dbfs:/FileStore/recon/src/gold/close_period.py", "parameters": ["--period", "@pipeline().parameters.period"] }
+          }
+        ]
+      }
+    }
+  ],
+
+  "linked_services_required": [
+    "ls_databricks  (Azure Databricks, job cluster, Photon on; autoscale 2-8 workers)",
+    "ls_adls_gen2   (ADLS Gen2, abfss, managed identity auth)",
+    "ls_sftp        (operator SFTP/blob drop)"
+  ],
+
+  "orchestration_notes": [
+    "ForEach over operators runs land+bronze in parallel (batchCount 8) — independent operators never block each other; one bad feed fails only its branch.",
+    "Silver/gold are single Databricks tasks that read all operators at once (UNION ALL) — fewer, larger Spark jobs beat 7 tiny ones for shuffle efficiency.",
+    "All Databricks tasks are re-runnable: bronze/silver MERGE upsert, gold partition-overwrite. Re-triggering pl_recon_daily for an old date is safe and idempotent (subject to closed-month guard).",
+    "The DQ_TieOutGate hard-stops publish if the summary mart and detail fact disagree — Finance never sees an un-tied number.",
+    "Backfill = trigger pl_recon_daily across a date range (Tumbling-window trigger or a ForEach of dates). Closed months are protected automatically."
+  ]
+}

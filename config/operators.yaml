@@ -1,0 +1,193 @@
+# =============================================================================
+# Operator feed registry  (config-driven schema-on-read normalization)
+# -----------------------------------------------------------------------------
+# Each operator delivers a differently-shaped CSV/JSON file. Rather than writing
+# one bespoke parser per operator (7 code paths to maintain), we drive ingestion
+# from this declarative spec. Adding operator #8 = a new YAML block, no code change.
+#
+# The silver normalizer reads this file and maps each operator's raw columns onto
+# the canonical schema (see config/canonical_schema.yaml).
+#
+# `txn_type_map` collapses each operator's vocabulary onto our 5 canonical types:
+#   subscription_success | recursion_success | recursion_failure | refund | cancel
+# =============================================================================
+
+defaults:
+  reporting_currency: USD          # all amounts conformed to this for recon math
+  amount_tolerance_abs: 0.01       # absolute rounding tolerance (reporting ccy)
+  amount_tolerance_pct: 0.005      # 0.5% relative tolerance (FX rounding noise)
+  late_arrival_days: 2             # >= this many days after business_date = "late"
+  fallback_match_window_days: 1    # ± window for fuzzy (no-partner_txn_id) matching
+  resend_lookback_days: 3          # operators may re-send the previous N days
+
+operators:
+
+  # ----- Operator A: clean CSV, UTC-ish, simplest case ----------------------
+  telco_a:
+    enabled: true
+    file_format: csv
+    file_glob: "telco_a_*.csv"
+    csv_options: { header: true, delimiter: ",", quote: "\"" }
+    timezone: "Africa/Lagos"        # operator-local; converted to UTC in silver
+    currency: NGN
+    column_map:
+      partner_txn_id:    txn_ref
+      msisdn_or_account: msisdn
+      txn_type:          event_type
+      plan_code:         product_code
+      amount:            amount
+      currency:          ccy          # present but we trust `currency` default if null
+      txn_ts:            event_time
+    txn_type_map:
+      INIT_OK:    subscription_success
+      RENEW_OK:   recursion_success
+      RENEW_FAIL: recursion_failure
+      REFUND:     refund
+      CANCEL:     cancel
+
+  # ----- Operator B: JSON, nested, epoch-millis timestamp -------------------
+  telco_b:
+    enabled: true
+    file_format: json
+    file_glob: "telco_b_*.json"
+    json_options: { multiline: true }
+    timezone: "Asia/Karachi"
+    currency: PKR
+    # dotted paths => nested JSON extraction handled by the normalizer
+    column_map:
+      partner_txn_id:    transaction.id
+      msisdn_or_account: subscriber.msisdn
+      txn_type:          transaction.kind
+      plan_code:         transaction.plan
+      amount:            transaction.value_minor   # MINOR UNITS (paisa) -> see amount_scale
+      currency:          transaction.currency
+      txn_ts:            transaction.ts_epoch_ms
+    amount_scale: 0.01                # divide minor units by 100
+    ts_format: epoch_millis
+    txn_type_map:
+      sub:      subscription_success
+      rnw:      recursion_success
+      rnw_fail: recursion_failure
+      rfnd:     refund
+      cxl:      cancel
+
+  # ----- Operator C: CSV, semicolon-delimited, decimal comma, DD/MM/YYYY -----
+  telco_c:
+    enabled: true
+    file_format: csv
+    file_glob: "telco_c_*.csv"
+    csv_options: { header: true, delimiter: ";", quote: "\"" }
+    timezone: "Europe/Istanbul"
+    currency: TRY
+    decimal_comma: true               # "12,50" -> 12.50
+    ts_format: "dd/MM/yyyy HH:mm:ss"
+    column_map:
+      partner_txn_id:    REF
+      msisdn_or_account: ACCOUNT
+      txn_type:          TYPE
+      plan_code:         PLAN
+      amount:            AMOUNT
+      currency:          CURRENCY
+      txn_ts:            TS
+    txn_type_map:
+      "1": subscription_success
+      "2": recursion_success
+      "3": recursion_failure
+      "4": refund
+      "5": cancel
+
+  # ----- Operator D: CSV, NO partner_txn_id at all (fallback-key only) -------
+  telco_d:
+    enabled: true
+    file_format: csv
+    file_glob: "telco_d_*.csv"
+    csv_options: { header: true, delimiter: ",", quote: "\"" }
+    timezone: "Asia/Dhaka"
+    currency: BDT
+    column_map:
+      # partner_txn_id intentionally absent -> stays null -> forces fallback match
+      msisdn_or_account: phone
+      txn_type:          action
+      plan_code:         bundle
+      amount:            charge
+      currency:          cur
+      txn_ts:            charged_at
+    txn_type_map:
+      activate:  subscription_success
+      rebill:    recursion_success
+      rebill_ko: recursion_failure
+      reverse:   refund
+      stop:      cancel
+
+  # ----- Operator E: wallet, USD already, ISO-8601, multi-currency rows ------
+  wallet_x:
+    enabled: true
+    file_format: json
+    file_glob: "wallet_x_*.json"
+    json_options: { multiline: false }   # newline-delimited JSON (one obj per line)
+    timezone: "UTC"
+    currency: USD
+    column_map:
+      partner_txn_id:    id
+      msisdn_or_account: account_id
+      txn_type:          type
+      plan_code:         sku
+      amount:            amount
+      currency:          currency
+      txn_ts:            created_at        # ISO-8601 with offset
+    ts_format: iso8601
+    txn_type_map:
+      purchase:        subscription_success
+      renewal:         recursion_success
+      renewal_failed:  recursion_failure
+      chargeback:      refund
+      cancellation:    cancel
+
+  # ----- Operator F: CSV, sends a STATUS col, refunds as negative amounts ----
+  telco_f:
+    enabled: true
+    file_format: csv
+    file_glob: "telco_f_*.csv"
+    csv_options: { header: true, delimiter: ",", quote: "\"" }
+    timezone: "Asia/Colombo"
+    currency: LKR
+    column_map:
+      partner_txn_id:    transaction_id
+      msisdn_or_account: msisdn
+      txn_type:          txn_status
+      plan_code:         plan_id
+      amount:            amount
+      currency:          currency
+      txn_ts:            timestamp
+    # telco_f encodes refunds as a negative amount on a "billing" row;
+    # the normalizer flips negative billing rows to refund (see normalizer notes).
+    negative_amount_means_refund: true
+    txn_type_map:
+      billing_success:  recursion_success
+      first_billing:    subscription_success
+      billing_failure:  recursion_failure
+      refund:           refund
+      cancel:           cancel
+
+  # ----- Operator G: optional 7th operator, disabled by default --------------
+  wallet_y:
+    enabled: false
+    file_format: csv
+    file_glob: "wallet_y_*.csv"
+    csv_options: { header: true, delimiter: ",", quote: "\"" }
+    timezone: "Asia/Kolkata"
+    currency: INR
+    column_map:
+      partner_txn_id:    ref_no
+      msisdn_or_account: wallet_acc
+      txn_type:          txn_type
+      plan_code:         plan
+      amount:            amt
+      currency:          curr
+      txn_ts:            txn_time
+    txn_type_map:
+      NEW:   subscription_success
+      REC:   recursion_success
+      RECF:  recursion_failure
+      RFND:  refund
+      CXL:   cancel

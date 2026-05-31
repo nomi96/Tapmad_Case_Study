@@ -1,0 +1,2 @@
+user_id,operator_code,churn_ts,churn_reason,last_known_sub_id
+U_ORPHAN,telco_a,2026-05-20T10:00:00,voluntary,S_ORPHAN

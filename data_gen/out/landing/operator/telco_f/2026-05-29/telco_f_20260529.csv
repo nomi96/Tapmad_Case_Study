@@ -1,0 +1,2 @@
+transaction_id,msisdn,txn_status,plan_id,amount,currency,timestamp
+TXNF1,94000000001,billing_success,PLN_F1,-450.00,LKR,2026-05-29T10:00:00

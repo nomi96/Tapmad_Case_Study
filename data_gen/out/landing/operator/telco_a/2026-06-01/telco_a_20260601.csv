@@ -1,0 +1,2 @@
+txn_ref,msisdn,event_type,product_code,amount,ccy,event_time
+TXNA7,2348010000007,RENEW_OK,PLN_A1,1500.00,NGN,2026-05-29T12:00:00

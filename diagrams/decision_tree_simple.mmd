@@ -1,0 +1,34 @@
+%%{init: {'theme':'neutral','flowchart':{'curve':'basis','nodeSpacing':45,'rankSpacing':55}}}%%
+flowchart TD
+  START([One day of transactions<br/>partner side + platform side]):::start --> S1
+
+  S1{"Stage 1<br/>Same transaction ID<br/>on both sides?"}:::dec
+  S1 -->|"yes, amounts agree"| MATCHED([matched]):::ok
+  S1 -->|"yes, amounts differ"| MISMATCH([amount_mismatch]):::brk
+  S1 -->|"no shared ID"| S2
+
+  S2{"Stage 2<br/>Match by identity instead?<br/>phone to user, then score it"}:::dec
+  S2 -->|"score 0.80 or higher"| MATCHED
+  S2 -->|"score below 0.80"| REVIEW([fallback_below_floor<br/>flag for a human]):::brk
+  S2 -->|"no identity found"| S3
+
+  S3{"Stage 3<br/>Only one side has it?"}:::dec
+  S3 -->|"partner billed, we have nothing"| MOP([missing_on_platform]):::brk
+  S3 -->|"we granted, no partner money"| MAP([missing_at_partner]):::brk
+
+  MATCHED --> OVL
+  MISMATCH --> OVL
+  MOP --> OVL
+  MAP --> OVL
+  REVIEW --> OVL
+
+  OVL{"Stages 4 and 5<br/>Two final overlays"}:::dec
+  OVL -->|"user churned but still billed"| ORPHAN([orphan_churn]):::brk
+  OVL -->|"file arrived 2+ days late"| LATE([late_arrival<br/>book to original day]):::brk
+  OVL -->|"neither applies"| KEEP([keep the label above]):::done
+
+  classDef start fill:#eef2ff,stroke:#6366f1,color:#1e1b4b;
+  classDef dec fill:#f8fafc,stroke:#475569,color:#0f172a;
+  classDef ok fill:#dcfce7,stroke:#16a34a,color:#14532d;
+  classDef brk fill:#fef3c7,stroke:#d97706,color:#78350f;
+  classDef done fill:#e2e8f0,stroke:#475569,color:#0f172a;

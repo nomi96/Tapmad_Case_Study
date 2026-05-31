@@ -1,0 +1,69 @@
+%%{init: {'theme':'base','themeVariables':{'fontSize':'14px'},'flowchart':{'curve':'basis','rankSpacing':55,'nodeSpacing':35}}}%%
+flowchart TB
+
+  subgraph ORCH["ORCHESTRATION — Azure Data Factory"]
+    direction LR
+    TRG["① Schedule trigger<br/>fires nightly, 03:00 UTC"]
+    PDAILY["pl_recon_daily<br/>ForEach operator: land + bronze<br/>then silver, gold, DQ tie-out gate"]
+    PCLOSE["pl_recon_month_close<br/>restate all days, then freeze month"]
+    TRG --> PDAILY
+  end
+
+  subgraph SRC["SOURCES"]
+    direction LR
+    OP["Operator feeds<br/>CSV . JSON . NDJSON"]
+    OLTP["Internal OLTP (CDC)<br/>sub_initial_{op}, recursion_*,<br/>user_churn_events"]
+    FXS["FX rates feed"]
+  end
+
+  subgraph LAKE["STORAGE — ADLS Gen2 . Delta Lake . Unity Catalog (recon.*)"]
+    direction LR
+    LAND["② landing/<br/>raw, immutable<br/>by arrival_date"]:::land
+    BRZ["③ bronze/<br/>typed + lineage<br/>idempotent MERGE"]:::bronze
+    SLV["④ silver/<br/>partner_txn . platform_txn<br/>account_user_bridge (SCD2)<br/>dim_plan (SCD2) . fx_rate_daily"]:::silver
+    GLD["⑥ gold/<br/>fact_reconciliation_break<br/>reconciliation_daily"]:::gold
+    LAND --> BRZ --> SLV --> GLD
+  end
+
+  subgraph CMP["COMPUTE — Databricks / Microsoft Fabric (PySpark + Delta)"]
+    ENG["⑤ Reconciliation engine<br/>1 exact-ID  .  2 fallback identity (scored)<br/>3 residual  .  4 orphan-churn  .  5 late-arrival"]
+  end
+
+  subgraph CTRL["CONTROL & GOVERNANCE"]
+    direction TB
+    PCTL["recon_period_control<br/>closed-month guard"]
+    RLOG["⑧ recon_run_log<br/>audit of every run"]
+    PCAT["plan_catalog<br/>source for dim_plan"]
+  end
+
+  subgraph SERVE["SERVING — SQL marts & BI"]
+    direction LR
+    CLOSE["⑦ monthly_revenue_close<br/>+ tie-out check"]
+    BREAK["⑦ daily_break_report<br/>+ fallback review queue"]
+    BI["Finance & Product"]
+    CLOSE --> BI
+    BREAK --> BI
+  end
+
+  SRC ==> LAND
+  SLV ==> ENG
+  ENG ==> GLD
+  PCTL -. guards writes .-> GLD
+  PCAT -. feeds .-> SLV
+  GLD --> RLOG
+  GLD ==> CLOSE
+  GLD ==> BREAK
+  ORCH -. drives .-> LAKE
+  ORCH -. drives .-> CMP
+
+  classDef land fill:#f1f5f9,stroke:#94a3b8,color:#0f172a;
+  classDef bronze fill:#f0ddc6,stroke:#b08968,color:#3f2d1e;
+  classDef silver fill:#e3eaf1,stroke:#8da2b5,color:#1f2a37;
+  classDef gold fill:#fbeeb5,stroke:#d4a017,color:#5b4708;
+
+  style ORCH fill:#ede9fe,stroke:#7c3aed
+  style SRC fill:#eef2f7,stroke:#64748b
+  style LAKE fill:#fafafa,stroke:#475569
+  style CMP fill:#e0f2fe,stroke:#0284c7
+  style CTRL fill:#fee2e2,stroke:#dc2626
+  style SERVE fill:#dcfce7,stroke:#16a34a

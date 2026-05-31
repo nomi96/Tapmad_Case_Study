@@ -1,0 +1,105 @@
+%%{init: {'theme':'neutral'}}%%
+erDiagram
+  PARTNER_TXN ||--o{ FACT_RECON_BREAK : "partner_event_id"
+  PLATFORM_TXN ||--o{ FACT_RECON_BREAK : "platform_event_id"
+  ACCOUNT_USER_BRIDGE ||--o{ PARTNER_TXN : "resolves account_id→user_id (point-in-time)"
+  DIM_PLAN ||--o{ FACT_RECON_BREAK : "expected price as-of business_date"
+  FX_RATE_DAILY ||--o{ PARTNER_TXN : "currency,rate_date"
+  FX_RATE_DAILY ||--o{ PLATFORM_TXN : "currency,rate_date"
+  FACT_RECON_BREAK }o--|| RECONCILIATION_DAILY : "aggregated by business_date,operator"
+  RECON_PERIOD_CONTROL ||--o{ FACT_RECON_BREAK : "period_month gates writes"
+
+  PARTNER_TXN {
+    string event_id PK
+    string operator_code
+    string partner_txn_id "nullable"
+    string account_id
+    string user_id "null until bridged"
+    string plan_code
+    string txn_type
+    decimal amount_reporting
+    timestamp txn_ts_utc
+    date business_date
+    date file_arrival_date
+    string record_hash
+  }
+  PLATFORM_TXN {
+    string event_id PK
+    string operator_code
+    string partner_txn_id "nullable"
+    string account_id
+    string user_id
+    string sub_id
+    string plan_code
+    string txn_type
+    decimal amount_reporting
+    date business_date
+    date file_arrival_date
+    string record_hash
+  }
+  ACCOUNT_USER_BRIDGE {
+    string operator_code
+    string account_id
+    string user_id
+    string sub_id
+    date effective_from "SCD2"
+    date effective_to "SCD2 (9999-12-31 if current)"
+    boolean is_current "SCD2"
+    string record_hash
+  }
+  DIM_PLAN {
+    string plan_sk PK
+    string operator_code
+    string plan_code
+    decimal price_original
+    string currency
+    string billing_period
+    date effective_from "SCD2"
+    date effective_to "SCD2 (9999-12-31 if current)"
+    boolean is_current "SCD2"
+    string record_hash
+  }
+  FX_RATE_DAILY {
+    string currency
+    date rate_date
+    decimal rate_to_reporting
+  }
+  FACT_RECON_BREAK {
+    string break_id PK
+    date business_date
+    string operator_code
+    string partner_event_id FK
+    string platform_event_id FK
+    string break_category
+    string match_method
+    double match_confidence
+    decimal partner_amount
+    decimal internal_amount
+    decimal variance
+    decimal expected_amount "plan price as-of date (SCD2)"
+    boolean plan_price_ok
+    string plan_code
+    boolean is_late
+    int lag_days
+    date original_business_date "closed-month adj"
+    string adj_period
+  }
+  RECONCILIATION_DAILY {
+    date business_date
+    string operator_code
+    bigint matched_count
+    bigint break_count
+    decimal partner_amount_total
+    decimal internal_amount_total
+    decimal variance
+    bigint amount_mismatch_count
+    bigint missing_on_platform_count
+    bigint missing_at_partner_count
+    bigint orphan_churn_count
+    bigint late_arrival_count
+  }
+  RECON_PERIOD_CONTROL {
+    string period_month PK
+    string status "open|closed"
+    timestamp closed_at
+  }

@@ -1,0 +1,2 @@
+failure_id,sub_id,user_id,partner_txn_id,amount,failure_reason,attempt_ts,retry_count
+F_A1,SUB_A16,U_A16,,0.98,insufficient_funds,2026-05-29T06:00:00,2

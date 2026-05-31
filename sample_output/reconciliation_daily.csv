@@ -1,0 +1,6 @@
+business_date,operator_code,partner_txn_count,internal_txn_count,matched_count,break_count,partner_amount_total,internal_amount_total,variance,amount_mismatch_count,missing_on_platform_count,missing_at_partner_count,orphan_churn_count,late_arrival_count
+2026-05-29,telco_a,8,8,4,5,8.125,7.83,0.295,1,1,1,1,1
+2026-05-29,telco_b,1,1,1,0,1.98,1.98,0.0,0,0,0,0,0
+2026-05-29,telco_c,1,1,1,0,3.7355,3.74,-0.0045,0,0,0,0,0
+2026-05-29,telco_d,2,2,1,2,11.8209,7.73,4.0909,0,1,1,0,0
+2026-05-29,telco_f,1,0,0,1,1.485,0.0,1.485,0,1,0,0,0

@@ -1,0 +1,16 @@
+break_id,business_date,operator_code,break_category,txn_type,partner_txn_id,sub_id,account_id,plan_code,partner_amount,internal_amount,variance,expected_amount,plan_price_ok,match_method,match_confidence,is_late,lag_days,partner_event_id,platform_event_id
+052d5ecbd0270587,2026-05-29,telco_a,amount_mismatch,recursion_success,TXNA2,SUB_A2,2348010000002,PLN_A1,1.3,0.98,0.32000000000000006,0.975,False,partner_txn_id,1.0,False,0,d4fc7b4f62acd70b,8e3458b30e265cf9
+3c566b27c6faafcb,2026-05-29,telco_a,late_arrival,recursion_success,TXNA7,SUB_A7,2348010000007,PLN_A1,0.975,0.98,-0.0050000000000000044,0.975,True,partner_txn_id,1.0,True,3,6184ddd2e7331c86,8d5c10da6b1dacfe
+27323a3201dc612c,2026-05-29,telco_a,matched,recursion_success,TXNA3,SUB_A3,2348010000003,PLN_A1,0.975,0.97,0.0050000000000000044,0.975,True,partner_txn_id,1.0,False,0,24cea4ab47c238d3,23cc52d8d7658e30
+0074a1cee19e408f,2026-05-29,telco_a,matched,recursion_success,TXNA12,SUB_A12,2348010000012,PLN_A1,0.975,0.98,-0.0050000000000000044,0.975,True,partner_txn_id,1.0,False,0,e931840a9cfba829,294fb4e2fd983fd6
+8dbd3ed7acd73736,2026-05-29,telco_a,matched,recursion_success,TXNA1,SUB_A1,2348010000001,PLN_A1,0.975,0.98,-0.0050000000000000044,0.975,True,partner_txn_id,1.0,False,0,7a910e3c623f47e2,070ae4243e3470e6
+8faae1d600d631c8,2026-05-29,telco_a,matched,recursion_success,TXNA1,SUB_A1,2348010000001,PLN_A1,0.975,0.98,-0.0050000000000000044,0.975,True,partner_txn_id,1.0,False,0,7a910e3c623f47e2,6483696a381db939
+10b3fe0de5916bed,2026-05-29,telco_b,matched,recursion_success,TXNB1,SUB_B1,923000000001,PLN_B1,1.98,1.98,0.0,1.98,True,partner_txn_id,1.0,False,0,4f5a58830aa73301,8f7bdd6ed9a1f845
+603deb44ed362a0c,2026-05-29,telco_c,matched,recursion_success,TXNC1,SUB_C1,905000000001,PLN_C1,3.7355,3.74,-0.0045000000000001705,3.7355,True,partner_txn_id,1.0,False,0,7197e51fc327b793,051277e9c8c39f04
+d11792e739d57123,2026-05-29,telco_d,matched,recursion_success,,SUB_D1,8801000000001,PLN_D1,2.73,2.73,0.0,2.73,True,fallback_identity,0.9,False,0,3848f4db6f40f700,7999e4f010cf11d0
+0d82ad2a98fc8690,2026-05-29,telco_a,missing_at_partner,recursion_success,,SUB_A5,,,,0.98,-0.98,,,unmatched,0.0,False,0,,2b6c51b3a3d667aa
+5b260eee4e168e24,2026-05-29,telco_d,missing_at_partner,recursion_success,,SUB_D9,,,,5.0,-5.0,,,fallback_below_floor,0.7,False,0,,4a935f01e53ab7c8
+e0364b3e9d38fb0a,2026-05-29,telco_a,missing_on_platform,recursion_success,TXNA4,,2348010000004,PLN_A1,0.975,,0.975,0.975,True,unmatched,0.0,False,0,002969982af3ed17,
+3b22da9106382b4b,2026-05-29,telco_d,missing_on_platform,recursion_success,,,8801000000999,PLN_DX,9.0909,,9.0909,,,fallback_below_floor,0.7,False,0,32c1c0b65b03f633,
+968946b257efb8fb,2026-05-29,telco_f,missing_on_platform,refund,TXNF1,,94000000001,PLN_F1,1.485,,1.485,1.485,True,unmatched,0.0,False,0,22455cf07c38142d,
+24309ba4e4d5f4dc,2026-05-29,telco_a,orphan_churn,recursion_success,TXNA6,S_ORPHAN,2348019999999,PLN_A1,0.975,0.98,-0.0050000000000000044,0.975,True,partner_txn_id,1.0,False,0,6c11b13ffa73cace,4464bac90e96f38f

@@ -1,0 +1,71 @@
+# =============================================================================
+# Canonical schemas + reconciliation tuning knobs
+# Single source of truth for the shape of silver/gold tables and the recon rules.
+# =============================================================================
+
+# ----- Canonical transaction (silver.partner_txn and silver.platform_txn) ----
+# Both partner and platform rows are conformed to comparable columns so the
+# reconciliation engine joins like-for-like.
+canonical_txn:
+  columns:
+    - { name: event_id,        type: string,       desc: "deterministic surrogate hash of natural key" }
+    - { name: source_system,   type: string,       desc: "'partner' | 'platform'" }
+    - { name: operator_code,   type: string }
+    - { name: partner_txn_id,  type: string,       desc: "nullable; null forces fallback match" }
+    - { name: account_id,      type: string,       desc: "operator-side id (msisdn/account)" }
+    - { name: user_id,         type: string,       desc: "platform-side id; null on partner rows pre-bridge" }
+    - { name: sub_id,          type: string,       desc: "platform-side; nullable" }
+    - { name: plan_code,       type: string,       desc: "conformed plan reference" }
+    - { name: txn_type,        type: string,       desc: "canonical: subscription_success|recursion_success|recursion_failure|refund|cancel" }
+    - { name: billing_cycle,   type: int,          desc: "nullable" }
+    - { name: amount_original, type: "decimal(18,4)" }
+    - { name: currency_original, type: string }
+    - { name: amount_reporting,type: "decimal(18,4)", desc: "converted to reporting_currency via fx as-of business_date" }
+    - { name: reporting_currency, type: string }
+    - { name: fx_rate,         type: "decimal(18,8)" }
+    - { name: txn_ts_utc,      type: timestamp,    desc: "operator-local -> UTC" }
+    - { name: business_date,   type: date,         desc: "recon partition key (UTC calendar day of txn_ts_utc)" }
+    - { name: failure_reason,  type: string,       desc: "platform recursion_failure only" }
+    - { name: source_file,     type: string }
+    - { name: file_arrival_date, type: date }
+    - { name: record_hash,     type: string,       desc: "hash of business cols for change detection / dedup" }
+    - { name: ingest_ts,       type: timestamp }
+    - { name: is_correction,   type: boolean,      desc: "true if this row supersedes a prior version (re-send)" }
+
+reconciliation:
+  # match staging tolerances
+  amount_tolerance_abs: 0.01
+  amount_tolerance_pct: 0.005
+  fallback_match_window_days: 1
+  late_arrival_days: 2
+
+  # which canonical txn_types carry money (for variance / revenue math)
+  revenue_types: [subscription_success, recursion_success]
+  contra_revenue_types: [refund]            # subtract from revenue
+  non_revenue_types: [recursion_failure, cancel]
+
+  # break category enum (must match the mart)
+  break_categories:
+    - matched
+    - amount_mismatch
+    - missing_on_platform
+    - missing_at_partner
+    - orphan_churn
+    - late_arrival
+
+  # fallback match confidence floor; below this we DO NOT auto-match (avoid false pos)
+  fallback_min_confidence: 0.80
+  # additive confidence weights for the no-partner_txn_id fallback path.
+  # A bridge-resolved identity is necessary but NOT sufficient (0.60 < floor): we
+  # require monetary corroboration (amount within tolerance) to clear 0.80. This is
+  # the false-positive guard -- a plausible identity with a wrong amount stays a
+  # break (match_method = fallback_below_floor) for analyst review.
+  fallback_weights:
+    identity: 0.60       # account->user resolved via account_user_bridge
+    amount_within_tol: 0.20
+    plan_match: 0.10
+    same_business_date: 0.10
+
+period_control:
+  reporting_timezone: "UTC"        # business_date is assigned in this calendar
+  close_lag_days: 5                # finance closes month N a few days into month N+1

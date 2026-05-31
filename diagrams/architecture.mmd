@@ -1,0 +1,50 @@
+%%{init: {'theme':'base','themeVariables':{'fontSize':'14px'},'flowchart':{'curve':'basis','rankSpacing':75,'nodeSpacing':26}}}%%
+flowchart LR
+
+  subgraph ORCH["ORCHESTRATION"]
+    direction TB
+    ADF["Azure Data Factory<br/>nightly 03:00 UTC<br/>ForEach operator: bronze to silver to gold<br/>then DQ tie-out gate<br/>+ monthly-close pipeline"]:::orch
+  end
+
+  subgraph SRC["SOURCES"]
+    direction TB
+    OP["Operator feeds<br/>6-7 telcos & wallets<br/>CSV . JSON . NDJSON"]:::src
+    OLTP["Internal OLTP<br/>via CDC"]:::src
+    FX["FX rates"]:::src
+  end
+
+  subgraph LAYERS["DATA LAYERS — ADLS Gen2 . Delta (medallion)"]
+    direction LR
+    L["LANDING<br/>raw, immutable"]:::land
+    B["BRONZE<br/>typed + history"]:::bronze
+    S["SILVER<br/>one canonical schema<br/>+ SCD2 dimensions"]:::silver
+    G["GOLD<br/>reconciliation fact<br/>+ daily / monthly marts"]:::gold
+    L --> B --> S
+    S -->|"reconciliation engine - PySpark<br/>match . classify . explain"| G
+  end
+
+  subgraph CONS["END CONSUMERS"]
+    direction TB
+    FIN["Finance<br/>monthly revenue close"]:::out
+    PROD["Product<br/>break & silent-churn report"]:::out
+  end
+
+  OP --> L
+  OLTP --> L
+  FX --> L
+  G --> FIN
+  G --> PROD
+  ADF -. orchestrates .-> LAYERS
+
+  classDef src fill:#eef2f7,stroke:#64748b,color:#0f172a;
+  classDef land fill:#f1f5f9,stroke:#94a3b8,color:#0f172a;
+  classDef bronze fill:#f0ddc6,stroke:#b08968,color:#3f2d1e;
+  classDef silver fill:#e3eaf1,stroke:#8da2b5,color:#1f2a37;
+  classDef gold fill:#fbeeb5,stroke:#d4a017,color:#5b4708;
+  classDef out fill:#dcfce7,stroke:#16a34a,color:#14532d;
+  classDef orch fill:#ede9fe,stroke:#7c3aed,color:#3b0764;
+
+  style ORCH fill:#f5f3ff,stroke:#7c3aed
+  style SRC fill:#f8fafc,stroke:#64748b
+  style LAYERS fill:#fafafa,stroke:#475569
+  style CONS fill:#f0fdf4,stroke:#16a34a

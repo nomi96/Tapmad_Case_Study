@@ -1,0 +1,2 @@
+recursion_id,sub_id,user_id,partner_txn_id,amount,recurrence_ts,billing_cycle
+RC1,SUB_C1,U_C1,TXNC1,3.74,2026-05-29T14:00:00,2

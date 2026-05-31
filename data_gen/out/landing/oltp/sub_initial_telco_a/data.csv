@@ -1,0 +1,2 @@
+sub_id,user_id,operator_code,plan_id,partner_txn_id,status,created_ts,amount
+SUB_A1,U_A1,telco_a,PLN_A1,TXNA1,active,2026-05-01T00:00:00,0.98

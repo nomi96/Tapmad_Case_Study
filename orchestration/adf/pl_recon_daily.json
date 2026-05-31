@@ -1,0 +1,163 @@
+{
+  "name": "pl_recon_daily",
+  "properties": {
+    "description": "Daily payments reconciliation: land -> bronze -> silver -> gold. Parameterized over business_date; fans out per operator from a lookup of config/operators.yaml.",
+    "parameters": {
+      "business_date": { "type": "string", "defaultValue": "@formatDateTime(addDays(utcNow(),-1),'yyyy-MM-dd')" }
+    },
+    "variables": {
+      "enabled_operators": { "type": "Array" }
+    },
+    "activities": [
+      {
+        "name": "LookupEnabledOperators",
+        "type": "Lookup",
+        "comment": "Read the enabled operator list from a small control file so onboarding operator #8 needs no pipeline edit.",
+        "typeProperties": {
+          "source": { "type": "JsonSource" },
+          "dataset": { "referenceName": "ds_operator_registry_json", "type": "DatasetReference" },
+          "firstRowOnly": false
+        }
+      },
+
+      {
+        "name": "ForEachOperator_Land",
+        "type": "ForEach",
+        "dependsOn": [{ "activity": "LookupEnabledOperators", "dependencyConditions": ["Succeeded"] }],
+        "typeProperties": {
+          "isSequential": false,
+          "batchCount": 8,
+          "items": { "value": "@activity('LookupEnabledOperators').output.value", "type": "Expression" },
+          "activities": [
+            {
+              "name": "CopyOperatorFeed_SFTPtoADLS",
+              "type": "Copy",
+              "comment": "Land raw operator file(s) from SFTP/blob into ADLS landing zone, immutable, partitioned by arrival date.",
+              "typeProperties": {
+                "source": { "type": "BinarySource", "storeSettings": { "type": "SftpReadSettings", "recursive": true, "wildcardFileName": { "value": "@item().file_glob", "type": "Expression" } } },
+                "sink": { "type": "BinarySink", "storeSettings": { "type": "AzureBlobFSWriteSettings" } }
+              },
+              "inputs": [{ "referenceName": "ds_sftp_operator_feed", "type": "DatasetReference", "parameters": { "operator": "@item().operator_code" } }],
+              "outputs": [{ "referenceName": "ds_adls_landing_operator", "type": "DatasetReference", "parameters": { "operator": "@item().operator_code", "arrival": "@pipeline().parameters.business_date" } }]
+            },
+            {
+              "name": "Bronze_IngestOperator",
+              "type": "DatabricksSparkPython",
+              "dependsOn": [{ "activity": "CopyOperatorFeed_SFTPtoADLS", "dependencyConditions": ["Succeeded"] }],
+              "linkedServiceName": { "referenceName": "ls_databricks", "type": "LinkedServiceReference" },
+              "typeProperties": {
+                "pythonFile": "dbfs:/FileStore/recon/src/bronze/ingest_operator_feeds.py",
+                "parameters": ["--operator", "@item().operator_code", "--arrival", "@pipeline().parameters.business_date"]
+              }
+            }
+          ]
+        }
+      },
+
+      {
+        "name": "Bronze_IngestOLTP_CDC",
+        "type": "DatabricksSparkPython",
+        "dependsOn": [{ "activity": "ForEachOperator_Land", "dependencyConditions": ["Succeeded"] }],
+        "comment": "Dynamic discovery + UNION ALL of operator-suffixed OLTP tables.",
+        "linkedServiceName": { "referenceName": "ls_databricks", "type": "LinkedServiceReference" },
+        "typeProperties": {
+          "pythonFile": "dbfs:/FileStore/recon/src/bronze/ingest_oltp_cdc.py",
+          "parameters": ["--load-date", "@pipeline().parameters.business_date"]
+        }
+      },
+
+      {
+        "name": "Silver_LoadFX",
+        "type": "DatabricksSparkPython",
+        "dependsOn": [{ "activity": "LookupEnabledOperators", "dependencyConditions": ["Succeeded"] }],
+        "linkedServiceName": { "referenceName": "ls_databricks", "type": "LinkedServiceReference" },
+        "typeProperties": {
+          "pythonFile": "dbfs:/FileStore/recon/src/silver/load_fx_rates.py",
+          "parameters": ["--rate-date", "@pipeline().parameters.business_date"]
+        }
+      },
+
+      {
+        "name": "Silver_NormalizeOperatorFeeds",
+        "type": "DatabricksSparkPython",
+        "dependsOn": [
+          { "activity": "ForEachOperator_Land", "dependencyConditions": ["Succeeded"] },
+          { "activity": "Silver_LoadFX", "dependencyConditions": ["Succeeded"] }
+        ],
+        "linkedServiceName": { "referenceName": "ls_databricks", "type": "LinkedServiceReference" },
+        "typeProperties": { "pythonFile": "dbfs:/FileStore/recon/src/silver/normalize_operator_feeds.py" }
+      },
+
+      {
+        "name": "Silver_BuildPlatformTxn",
+        "type": "DatabricksSparkPython",
+        "dependsOn": [
+          { "activity": "Bronze_IngestOLTP_CDC", "dependencyConditions": ["Succeeded"] },
+          { "activity": "Silver_NormalizeOperatorFeeds", "dependencyConditions": ["Succeeded"] }
+        ],
+        "linkedServiceName": { "referenceName": "ls_databricks", "type": "LinkedServiceReference" },
+        "typeProperties": { "pythonFile": "dbfs:/FileStore/recon/src/silver/build_platform_txn.py" }
+      },
+
+      {
+        "name": "Silver_BuildDimPlan",
+        "type": "DatabricksSparkPython",
+        "comment": "SCD Type 2 plan dimension: effective-dated plan prices for point-in-time amount validation.",
+        "dependsOn": [
+          { "activity": "Silver_LoadFX", "dependencyConditions": ["Succeeded"] }
+        ],
+        "linkedServiceName": { "referenceName": "ls_databricks", "type": "LinkedServiceReference" },
+        "typeProperties": { "pythonFile": "dbfs:/FileStore/recon/src/silver/build_dim_plan.py" }
+      },
+
+      {
+        "name": "Gold_ReconciliationEngine",
+        "type": "DatabricksSparkPython",
+        "dependsOn": [
+          { "activity": "Silver_BuildPlatformTxn", "dependencyConditions": ["Succeeded"] },
+          { "activity": "Silver_BuildDimPlan", "dependencyConditions": ["Succeeded"] }
+        ],
+        "comment": "Match + classify. Guarded against closed-month overwrites; late closed-month rows routed to adjustment partition.",
+        "linkedServiceName": { "referenceName": "ls_databricks", "type": "LinkedServiceReference" },
+        "typeProperties": {
+          "pythonFile": "dbfs:/FileStore/recon/src/gold/reconciliation_engine.py",
+          "parameters": ["--business-date", "@pipeline().parameters.business_date"]
+        }
+      },
+
+      {
+        "name": "Gold_BuildMarts",
+        "type": "DatabricksSparkPython",
+        "dependsOn": [{ "activity": "Gold_ReconciliationEngine", "dependencyConditions": ["Succeeded"] }],
+        "linkedServiceName": { "referenceName": "ls_databricks", "type": "LinkedServiceReference" },
+        "typeProperties": {
+          "pythonFile": "dbfs:/FileStore/recon/src/gold/build_marts.py",
+          "parameters": ["--business-date", "@pipeline().parameters.business_date"]
+        }
+      },
+
+      {
+        "name": "DQ_TieOutGate",
+        "type": "Lookup",
+        "dependsOn": [{ "activity": "Gold_BuildMarts", "dependencyConditions": ["Succeeded"] }],
+        "comment": "Fails the run if the daily mart does not tie out to the break fact (control check #3 in monthly_revenue_close.sql).",
+        "typeProperties": {
+          "source": { "type": "AzureDatabricksDeltaLakeSource", "query": { "value": "SELECT COUNT(*) AS tie_break FROM recon.gold.reconciliation_daily d JOIN (SELECT business_date, operator_code, SUM(COALESCE(partner_amount,0)) pt FROM recon.gold.fact_reconciliation_break GROUP BY 1,2) f ON d.business_date=f.business_date AND d.operator_code=f.operator_code WHERE d.business_date='@{pipeline().parameters.business_date}' AND ABS(d.partner_amount_total-f.pt)>0.01", "type": "Expression" } },
+          "dataset": { "referenceName": "ds_databricks_delta", "type": "DatasetReference" }
+        }
+      },
+      {
+        "name": "FailIfTieOutBreaks",
+        "type": "IfCondition",
+        "dependsOn": [{ "activity": "DQ_TieOutGate", "dependencyConditions": ["Succeeded"] }],
+        "typeProperties": {
+          "expression": { "value": "@greater(int(activity('DQ_TieOutGate').output.firstRow.tie_break), 0)", "type": "Expression" },
+          "ifTrueActivities": [
+            { "name": "RaiseTieOutFailure", "type": "Fail", "typeProperties": { "message": "Daily mart does not tie out to break fact; blocking publish.", "errorCode": "RECON_TIEOUT" } }
+          ]
+        }
+      }
+    ],
+    "annotations": ["reconciliation", "daily"]
+  }
+}

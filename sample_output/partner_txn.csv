@@ -1,0 +1,13 @@
+event_id,source_system,operator_code,partner_txn_id,account_id,user_id,sub_id,plan_code,txn_type,amount_original,currency_original,amount_reporting,fx_rate,txn_ts_utc,business_date,source_file,file_arrival_date,record_hash
+d4fc7b4f62acd70b,partner,telco_a,TXNA2,2348010000002,,,PLN_A1,recursion_success,2000.0,NGN,1.3,0.00065,2026-05-29 11:00:00+00:00,2026-05-29,telco_a_20260529.csv,2026-05-29,4e7656f762ef73e2
+24cea4ab47c238d3,partner,telco_a,TXNA3,2348010000003,,,PLN_A1,recursion_success,1500.0,NGN,0.975,0.00065,2026-05-29 11:00:00+00:00,2026-05-29,telco_a_20260529.csv,2026-05-29,aeee55e184f47d8d
+002969982af3ed17,partner,telco_a,TXNA4,2348010000004,,,PLN_A1,recursion_success,1500.0,NGN,0.975,0.00065,2026-05-29 11:00:00+00:00,2026-05-29,telco_a_20260529.csv,2026-05-29,ecc32cde3ae122c0
+6c11b13ffa73cace,partner,telco_a,TXNA6,2348019999999,,,PLN_A1,recursion_success,1500.0,NGN,0.975,0.00065,2026-05-29 11:00:00+00:00,2026-05-29,telco_a_20260529.csv,2026-05-29,e5881b3ac90af94d
+e931840a9cfba829,partner,telco_a,TXNA12,2348010000012,,,PLN_A1,recursion_success,1500.0,NGN,0.975,0.00065,2026-05-29 22:30:00+00:00,2026-05-29,telco_a_20260529.csv,2026-05-29,a37c6815b7395d4e
+7a910e3c623f47e2,partner,telco_a,TXNA1,2348010000001,,,PLN_A1,recursion_success,1500.0,NGN,0.975,0.00065,2026-05-29 11:00:00+00:00,2026-05-29,telco_a_20260529.csv,2026-05-29,e32d973e1c998b69
+6184ddd2e7331c86,partner,telco_a,TXNA7,2348010000007,,,PLN_A1,recursion_success,1500.0,NGN,0.975,0.00065,2026-05-29 11:00:00+00:00,2026-05-29,telco_a_20260601.csv,2026-06-01,8f17d98d68136940
+4f5a58830aa73301,partner,telco_b,TXNB1,923000000001,,,PLN_B1,recursion_success,550.0,PKR,1.98,0.0036,2026-05-29 09:00:00+00:00,2026-05-29,telco_b_20260529.json,2026-05-29,dcdf6a22950c6b8e
+7197e51fc327b793,partner,telco_c,TXNC1,905000000001,,,PLN_C1,recursion_success,120.5,TRY,3.7355,0.031,2026-05-29 11:00:00+00:00,2026-05-29,telco_c_20260529.csv,2026-05-29,158b24cb87c5da2a
+3848f4db6f40f700,partner,telco_d,,8801000000001,,,PLN_D1,recursion_success,300.0,BDT,2.73,0.0091,2026-05-29 02:00:00+00:00,2026-05-29,telco_d_20260529.csv,2026-05-29,89455c5c6b8bcac4
+32c1c0b65b03f633,partner,telco_d,,8801000000999,,,PLN_DX,recursion_success,999.0,BDT,9.0909,0.0091,2026-05-29 02:30:00+00:00,2026-05-29,telco_d_20260529.csv,2026-05-29,770345fa63f69d9e
+22455cf07c38142d,partner,telco_f,TXNF1,94000000001,,,PLN_F1,refund,450.0,LKR,1.485,0.0033,2026-05-29 04:30:00+00:00,2026-05-29,telco_f_20260529.csv,2026-05-29,6ff1c5da2398cf1c

@@ -1,0 +1,14 @@
+event_id,source_system,operator_code,partner_txn_id,account_id,user_id,sub_id,plan_code,txn_type,amount_original,currency_original,amount_reporting,fx_rate,txn_ts_utc,business_date,source_file,file_arrival_date,record_hash,failure_reason
+8f7bdd6ed9a1f845,platform,telco_b,TXNB1,,U_B1,SUB_B1,,recursion_success,1.98,USD,1.98,1.0,2026-05-29 09:00:00+00:00,2026-05-29,data.csv,2026-05-29,3ff82c987dc96414,
+7999e4f010cf11d0,platform,telco_d,,,U_D1,SUB_D1,,recursion_success,2.73,USD,2.73,1.0,2026-05-29 08:00:00+00:00,2026-05-29,data.csv,2026-05-29,c6d50a7b8ff0b093,
+4a935f01e53ab7c8,platform,telco_d,,,U_D9,SUB_D9,,recursion_success,5.0,USD,5.0,1.0,2026-05-29 08:30:00+00:00,2026-05-29,data.csv,2026-05-29,60699c556833cd4b,
+051277e9c8c39f04,platform,telco_c,TXNC1,,U_C1,SUB_C1,,recursion_success,3.74,USD,3.74,1.0,2026-05-29 14:00:00+00:00,2026-05-29,data.csv,2026-05-29,ba8e5a621f063b90,
+070ae4243e3470e6,platform,telco_a,TXNA1,,U_A1,SUB_A1,,recursion_success,0.98,USD,0.98,1.0,2026-05-29 12:00:00+00:00,2026-05-29,data.csv,2026-05-29,81ba7ec5e72df137,
+8e3458b30e265cf9,platform,telco_a,TXNA2,,U_A2,SUB_A2,,recursion_success,0.98,USD,0.98,1.0,2026-05-29 12:00:00+00:00,2026-05-29,data.csv,2026-05-29,dae581c6225d4031,
+23cc52d8d7658e30,platform,telco_a,TXNA3,,U_A3,SUB_A3,,recursion_success,0.97,USD,0.97,1.0,2026-05-29 12:00:00+00:00,2026-05-29,data.csv,2026-05-29,b50c1c6133c80223,
+4464bac90e96f38f,platform,telco_a,TXNA6,,U_ORPHAN,S_ORPHAN,,recursion_success,0.98,USD,0.98,1.0,2026-05-29 12:00:00+00:00,2026-05-29,data.csv,2026-05-29,6a53a76b30b21c4b,
+294fb4e2fd983fd6,platform,telco_a,TXNA12,,U_A12,SUB_A12,,recursion_success,0.98,USD,0.98,1.0,2026-05-29 22:30:00+00:00,2026-05-29,data.csv,2026-05-29,e8ce951e133e3695,
+2b6c51b3a3d667aa,platform,telco_a,,,U_A5,SUB_A5,,recursion_success,0.98,USD,0.98,1.0,2026-05-29 12:00:00+00:00,2026-05-29,data.csv,2026-05-29,cbee39590ca26660,
+8d5c10da6b1dacfe,platform,telco_a,TXNA7,,U_A7,SUB_A7,,recursion_success,0.98,USD,0.98,1.0,2026-05-29 12:00:00+00:00,2026-05-29,data.csv,2026-05-29,68d6094c21cc0564,
+6483696a381db939,platform,telco_a,TXNA1,,U_A1,SUB_A1,PLN_A1,subscription_success,0.98,USD,0.98,1.0,2026-05-01 00:00:00+00:00,2026-05-01,data.csv,2026-05-29,6616cea5df82653e,
+1d1c5b7c7e3fbe97,platform,telco_a,,,U_A16,SUB_A16,,recursion_failure,0.0,USD,0.0,1.0,2026-05-29 06:00:00+00:00,2026-05-29,data.csv,2026-05-29,4a57f71a4e0c3dc2,insufficient_funds

@@ -1,0 +1,6 @@
+operator_code,gross_revenue,refunds,net_revenue,variance_under_review,missing_on_platform_cnt,leakage_cnt,orphan_churn_cnt
+telco_a,8.12,0.0,8.12,2.28,1,1,1
+telco_b,1.98,0.0,1.98,0.0,0,0,0
+telco_c,3.74,0.0,3.74,0.0,0,0,0
+telco_d,11.82,0.0,11.82,14.09,1,1,0
+telco_f,0.0,1.48,-1.48,1.48,1,0,0
