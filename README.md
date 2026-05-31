@@ -165,7 +165,7 @@ is already closed, it becomes an **adjustment row** booked into the current open
 
 ---
 
-## 6. Slowly-changing dimensions — Type 1 where it's an event, Type 2 where it's a fact about the world
+## 6. Slowly-changing dimensions
 
 The pipeline uses **both** SCD strategies, deliberately:
 
