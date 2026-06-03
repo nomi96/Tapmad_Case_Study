@@ -157,7 +157,7 @@ the operator is still billing a churned user (real revenue, but a retention/disp
 flag).
 
 **Stage 5 — late-arrival overlay.** If `file_arrival_date − business_date ≥ 2`, the row
-is flagged late and merged into its **original** business_date (see §6). If that period
+is flagged late and merged into its **original** business_date. If that period
 is already closed, it becomes an **adjustment row** booked into the current open period.
 
 ---
