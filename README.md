@@ -127,7 +127,7 @@ Both sides are first restricted to **money-bearing** txn types and conformed to 
 common reporting currency and a UTC-derived `business_date`. Then:
 
 **Stage 1 — exact key match** on `(operator_code, partner_txn_id)`. Amounts compared
-within tolerance `max(abs 0.01, pct 0.5%)` → `matched` or `amount_mismatch`. Confidence 1.0.
+within tolerance `max(abs 0.01, pct 0.005%)` → `matched` or `amount_mismatch`. Confidence 1.0.
 
 **Stage 2 — fallback identity match** for rows with **no usable `partner_txn_id`**
 (telco_d, or null platform FKs). This is the subtle part the case calls out, so it is
