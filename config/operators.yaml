@@ -96,7 +96,7 @@ operators:
       "4": refund
       "5": cancel
 
-  # ----- Operator D: CSV, NO partner_txn_id at all (fallback-key only) -------
+  # ----- Operator D: CSV -------
   telco_d:
     enabled: true
     file_format: csv
@@ -105,7 +105,7 @@ operators:
     timezone: "Asia/Dhaka"
     currency: BDT
     column_map:
-      # partner_txn_id intentionally absent -> stays null -> forces fallback match
+      partner_txn_id:    id
       msisdn_or_account: phone
       txn_type:          action
       plan_code:         bundle
