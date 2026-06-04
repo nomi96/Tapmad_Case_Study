@@ -98,7 +98,7 @@ the messy realities:
 | `telco_a` | clean CSV | NGN, Lagos tz | the happy path |
 | `telco_b` | **nested JSON** | PKR | amount in **minor units** (paisa), **epoch-millis** ts |
 | `telco_c` | semicolon CSV | TRY, Istanbul | **decimal comma**, `dd/MM/yyyy` dates |
-| `telco_d` | CSV | BDT | **no `partner_txn_id` at all** → forces fallback matching |
+| `telco_d` | CSV | BDT | **Missing `partner_txn_id` at platform** → forces fallback matching |
 | `wallet_x` | NDJSON | USD | ISO-8601 with offset |
 | `telco_f` | CSV | LKR | **negative amount = refund** (contra-revenue) |
 | `wallet_y` | (disabled) | INR | proves enable/disable is a config flag |
@@ -130,7 +130,7 @@ common reporting currency and a UTC-derived `business_date`. Then:
 within tolerance `max(abs 0.01, pct 0.005%)` → `matched` or `amount_mismatch`. Confidence 1.0.
 
 **Stage 2 — fallback identity match** for rows with **no usable `partner_txn_id`**
-(telco_d, or null platform FKs). This is the subtle part the case calls out, so it is
+(null platform FKs). This is the subtle part the case calls out, so it is
 designed conservatively:
 
 - Resolve `account_id → user_id` via `account_user_bridge`. If identity can't be
